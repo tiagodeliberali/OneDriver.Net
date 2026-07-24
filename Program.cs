@@ -11,6 +11,9 @@ internal class Program
         // Initialize Graph
         InitializeGraph(settings);
 
+        // Sign in (or silently reuse a persisted session) before any Graph call
+        await GraphHelper.EnsureAuthenticatedAsync();
+
         // Greet the user by name
         await GreetUserAsync();
 
@@ -69,10 +72,8 @@ internal class Program
                 settings,
                 (info, cancel) =>
                 {
-                    // Display the device code message to
-                    // the user. This tells them
-                    // where to go to sign in and provides the
-                    // code to use.
+                    // Display the device code message to the user. This tells them
+                    // where to go to sign in and provides the code to use.
                     Console.WriteLine(info.Message);
                     return Task.FromResult(0);
                 });

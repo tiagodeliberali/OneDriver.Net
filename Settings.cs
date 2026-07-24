@@ -10,6 +10,15 @@ public class Settings
 
     public string[]? GraphUserScopes { get; set; }
 
+    public TokenCacheSettings TokenCache { get; set; } = new();
+
+    public class TokenCacheSettings
+    {
+        public string Name { get; set; } = "OneDriver.Net.TokenCache";
+
+        public bool AllowUnencryptedStorage { get; set; }
+    }
+
     public static Settings LoadSettings()
     {
         // Load settings
