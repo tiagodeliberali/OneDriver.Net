@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using OneDriver.Net.Commands;
 
 namespace OneDriver.Net;
 
@@ -21,88 +22,57 @@ internal class Program
             Console.ResetColor();
         }
         
-        InitializeGraph(settings);
-
-        await GraphHelper.EnsureAuthenticatedAsync();
+        await InitializeGraph(settings);
         await GreetUserAsync();
 
         var runtimeData = new RuntimeData(await GraphHelper.GetDriverIdAsync());
         runtimeData.PushFolder(new Entry("root", "root"), await GraphHelper.GetDriverItemsAsync(runtimeData.DriverId, "root"));
 
+        var commands = new Dictionary<string, ICommand>
+        {
+            { "ls", new LsCommand() },
+            { "cd", new CdCommand() },
+            { "quit", new QuitCommand() }
+        };
+        var knowCommandsMessage = $"Available commands: {string.Join(", ", commands.Keys)}. Type 'help <command>' for more information on a specific command.";
+
         string choice = string.Empty;
 
-        while (choice != "quit")
+        while(true)
         {
             Console.Write($" {runtimeData.GetCurrentFolderName()} >> ");
             choice = Console.ReadLine() ?? string.Empty;
 
-            if (choice == "ls")
+            var commandArgs = choice.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (commandArgs.Length == 0)
+                continue;
+
+            var command = commandArgs[0];
+
+            if (command == "help")
             {
-                try
+                if (commandArgs.Length > 1 && commands.ContainsKey(commandArgs[1]))
                 {
-                    var currentItems = runtimeData.GetCurrentFolderItems();
-
-                    if (currentItems.Count == 0)
-                    {
-                        Console.WriteLine("No items found.");
-                        continue;
-                    }
-
-                    Console.ForegroundColor = ConsoleColor.Blue;
-                    foreach (var item in currentItems.Where(x => x != null && x is Folder).OrderBy(x => x.Name).Select(x => x as Folder))
-                    {
-                        Console.WriteLine($"[{item!.Name} - ({item.NumberOfChildren} items)]");
-                    }
-                    Console.ResetColor();
-
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    foreach (var item in currentItems.Where(x => x != null && x is not Folder).OrderBy(x => x.Name))
-                    {
-                        Console.WriteLine($"{item.Name}");
-                    }
-                    Console.ResetColor();
+                    Console.WriteLine(commands[commandArgs[1]].GetHelp());
                 }
-                catch (Exception ex)
+                else
                 {
-                    Console.WriteLine($"Error getting driver: {ex.Message}");
+                    Console.WriteLine(knowCommandsMessage);
                 }
             }
-            else if (choice.StartsWith("cd"))
+            else if (commands.ContainsKey(command))
             {
-                var parts = choice.Split(' ', 2);
-                if (parts.Length < 2)
-                {
-                    Console.WriteLine("Usage: cd <folderId>");
-                    continue;
-                }
-
-                var folderName = parts[1];
-
-                try
-                {
-                    if (folderName == "..")
-                    {
-                        runtimeData.PopFolder();
-                        continue;
-                    }
-
-                    var folderId = runtimeData.GetFolderIdByName(folderName);
-                    var result = await GraphHelper.GetDriverItemsAsync(runtimeData.DriverId, folderId);
-                    runtimeData.PushFolder(new Entry(folderName, folderId), result);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error getting folder items: {ex.Message}");
-                }
+                await commands[command].ExecuteAsync(commandArgs, runtimeData);
             }
-            else if (choice != "quit")
+            else
             {
-                Console.WriteLine("Unknown command. Available commands: ls, cd <folderId>, quit");
+                Console.WriteLine($"Unknown command. {knowCommandsMessage}");
             }
         }
 
-        void InitializeGraph(Settings settings)
+        async Task InitializeGraph(Settings settings)
         {
+            await GraphHelper.EnsureAuthenticatedAsync();
             GraphHelper.InitializeGraphForUserAuth(
                 settings,
                 (info, cancel) =>
