@@ -168,14 +168,21 @@ public class GraphHelper
 
         var result = await userClient.Drives[driveId].Items[folderId].Children.GetAsync((config) =>
         {
-            config.QueryParameters.Select = ["id", "name"];
+            config.QueryParameters.Select = ["id", "name", "file", "folder"];
         });
 
         if (result?.Value != null)
         {
             foreach (var item in result.Value.Where(i => i != null && i.Name != null && i.Id != null))
             {
-                items[item.Name!] = new Entry(item.Name!, item.Id!);
+                if (item.Folder != null)
+                {
+                    items[item.Name!] = new Folder(item.Name!, item.Id!, item.Folder.ChildCount ?? 0);
+                }
+                else
+                {
+                    items[item.Name!] = new Entry(item.Name!, item.Id!);
+                }
             }
         }
 

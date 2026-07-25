@@ -48,10 +48,19 @@ internal class Program
                         continue;
                     }
 
-                    foreach (var item in currentItems)
+                    Console.ForegroundColor = ConsoleColor.Blue;
+                    foreach (var item in currentItems.Where(x => x != null && x is Folder).OrderBy(x => x.Name).Select(x => x as Folder))
                     {
-                        Console.WriteLine($"{item.Name} ({item.Id})");
+                        Console.WriteLine($"[{item!.Name} - ({item.NumberOfChildren} items)]");
                     }
+                    Console.ResetColor();
+
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    foreach (var item in currentItems.Where(x => x != null && x is not Folder).OrderBy(x => x.Name))
+                    {
+                        Console.WriteLine($"{item.Name}");
+                    }
+                    Console.ResetColor();
                 }
                 catch (Exception ex)
                 {
