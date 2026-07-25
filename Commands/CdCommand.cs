@@ -25,7 +25,7 @@ public class CdCommand : ICommand
                 return;
             }
 
-            var folderId = runtimeData.GetFolderIdByName(folderName);
+            var folderId = runtimeData.GetItemIdByName(folderName);
             var result = await GraphHelper.GetDriverItemsAsync(runtimeData.DriverId, folderId);
             runtimeData.PushFolder(new Entry(folderName, folderId), result);
         }

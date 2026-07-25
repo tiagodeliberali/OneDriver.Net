@@ -37,7 +37,7 @@ public class RuntimeData
         return [.. CurrentFolderStack.Peek().Items.Values];
     }
 
-    public string GetFolderIdByName(string folderName)
+    public string GetItemIdByName(string itemName)
     {
         if (CurrentFolderStack.Count == 0)
         {
@@ -46,13 +46,13 @@ public class RuntimeData
 
         var currentFolderItems = CurrentFolderStack.Peek().Items;
 
-        if (currentFolderItems.TryGetValue(folderName, out var entry))
+        if (currentFolderItems.TryGetValue(itemName, out var entry))
         {
             return entry.Id;
         }
         else
         {
-            throw new KeyNotFoundException($"Folder '{folderName}' not found in the current folder.");
+            throw new KeyNotFoundException($"Item '{itemName}' not found in the current folder.");
         }
     }
 
@@ -62,7 +62,7 @@ public class RuntimeData
 
         int firstSeparatorIndex = path.IndexOfAny([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar]);
 
-        // remove root folder from path
+        // remove 'root' folder from path
         string modifiedPath = firstSeparatorIndex != -1 
             ? path[(firstSeparatorIndex + 1)..] 
             : path;

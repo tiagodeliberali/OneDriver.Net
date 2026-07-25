@@ -26,7 +26,7 @@ public class DfCommand : ICommand
         }
 
         var fileName = args[1];
-        var fileId = runtimeData.GetFolderIdByName(fileName);
+        var fileId = runtimeData.GetItemIdByName(fileName);
         var localFilePath = Path.Combine(localPath, fileName);
 
         if (File.Exists(localFilePath))

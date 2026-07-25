@@ -1,7 +1,6 @@
 using Azure.Core;
 using Azure.Identity;
 using Microsoft.Graph;
-using Microsoft.Graph.Models;
 
 namespace OneDriver.Net;
 
