@@ -32,9 +32,10 @@ internal class Program
         {
             { "ls", new LsCommand() },
             { "cd", new CdCommand() },
-            { "quit", new QuitCommand() }
+            { "quit", new QuitCommand() },
+            { "df", new DfCommand() }
         };
-        var knowCommandsMessage = $"Available commands: {string.Join(", ", commands.Keys)}. Type 'help <command>' for more information on a specific command.";
+        var knowCommandsMessage = $"Available commands:\n {string.Join("\n", commands.Keys)}. \n\nType 'help <command>' for more information on a specific command.";
 
         string choice = string.Empty;
 
@@ -72,7 +73,6 @@ internal class Program
 
         async Task InitializeGraph(Settings settings)
         {
-            await GraphHelper.EnsureAuthenticatedAsync();
             GraphHelper.InitializeGraphForUserAuth(
                 settings,
                 (info, cancel) =>
@@ -81,6 +81,8 @@ internal class Program
                     Console.WriteLine(info.Message);
                     return Task.FromResult(0);
                 });
+            
+            await GraphHelper.EnsureAuthenticatedAsync();
         }
 
         async Task GreetUserAsync()

@@ -188,4 +188,14 @@ public class GraphHelper
 
         return items;
     }
+
+    public static async Task<Stream?> DownloadFileAsync(string driverId, string fileId)
+    {
+        if (userClient == null)
+        {
+            throw new NullReferenceException("Graph has not been initialized for user auth");
+        }
+
+        return await userClient.Drives[driverId].Items[fileId].Content.GetAsync();
+    }
 }

@@ -55,4 +55,18 @@ public class RuntimeData
             throw new KeyNotFoundException($"Folder '{folderName}' not found in the current folder.");
         }
     }
+
+    public string GetCurrentPath()
+    {
+        var path = string.Join("/", CurrentFolderStack.Reverse().Select(f => f.Folder.Name));
+
+        int firstSeparatorIndex = path.IndexOfAny([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar]);
+
+        // remove root folder from path
+        string modifiedPath = firstSeparatorIndex != -1 
+            ? path[(firstSeparatorIndex + 1)..] 
+            : path;
+
+        return modifiedPath;
+    }
 }
