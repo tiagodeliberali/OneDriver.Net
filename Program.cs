@@ -33,7 +33,7 @@ internal class Program
 
         while (choice != "quit")
         {
-            Console.Write($" {runtimeData.CurrentFolder.Name} >> ");
+            Console.Write($" {runtimeData.GetCurrentFolderName()} >> ");
             choice = Console.ReadLine() ?? string.Empty;
 
             if (choice == "ls")
@@ -80,6 +80,12 @@ internal class Program
 
                 try
                 {
+                    if (folderName == "..")
+                    {
+                        runtimeData.PopFolder();
+                        continue;
+                    }
+
                     var folderId = runtimeData.GetFolderIdByName(folderName);
                     var result = await GraphHelper.GetDriverItemsAsync(runtimeData.DriverId, folderId);
                     runtimeData.PushFolder(new Entry(folderName, folderId), result);
