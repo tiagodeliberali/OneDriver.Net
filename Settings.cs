@@ -31,5 +31,7 @@ public class Settings
     {
         // Kept low on purpose: OneDrive throttles aggressive clients with HTTP 429.
         public int MaxConcurrentDownloads { get; set; } = 8;
+
+        public int MaxConcurrentUploads { get; set; } = 4;
     }
 }

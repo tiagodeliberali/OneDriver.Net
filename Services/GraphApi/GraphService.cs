@@ -1,4 +1,5 @@
 using Microsoft.Graph;
+using Microsoft.Graph.Drives.Item.Items.Item.CreateUploadSession;
 using Microsoft.Graph.Models;
 using OneDriver.Net.Domain;
 
@@ -7,6 +8,9 @@ namespace OneDriver.Net.Services.GraphApi;
 public class GraphService : IGraphService
 {
     private const int PageSize = 200;
+    private const long SimpleUploadMaxBytes = 4L * 1024 * 1024;
+    // Upload session chunks must be a multiple of 320 KiB.
+    private const int UploadChunkSizeBytes = 10 * 320 * 1024;
 
     private readonly IGraphServiceClientFactory graphClientFactory;
     private GraphServiceClient? graphClient;
@@ -39,6 +43,45 @@ public class GraphService : IGraphService
     public async Task<Stream?> DownloadFileAsync(string fileId)
     {
         return await Client.Drives[driverId].Items[fileId].Content.GetAsync();
+    }
+
+    public async Task<OneDriveFile?> UploadFileAsync(string folderId, string fileName, Stream fileStream)
+    {
+        // Simple uploads only work for small payloads; anything bigger needs a resumable upload session.
+        var useUploadSession = !fileStream.CanSeek || fileStream.Length > SimpleUploadMaxBytes;
+
+        var uploaded = useUploadSession
+            ? await UploadWithSessionAsync(folderId, fileName, fileStream)
+            : await Client.Drives[driverId].Items[folderId].ItemWithPath(fileName).Content.PutAsync(fileStream);
+
+        return ToOneDriveEntry(uploaded) as OneDriveFile;
+    }
+
+    private async Task<DriveItem?> UploadWithSessionAsync(string folderId, string fileName, Stream fileStream)
+    {
+        var sessionRequest = new CreateUploadSessionPostRequestBody
+        {
+            Item = new DriveItemUploadableProperties
+            {
+                AdditionalData = new Dictionary<string, object>
+                {
+                    { "@microsoft.graph.conflictBehavior", "fail" }
+                }
+            }
+        };
+
+        var uploadSession = await Client.Drives[driverId].Items[folderId].ItemWithPath(fileName)
+            .CreateUploadSession.PostAsync(sessionRequest);
+
+        if (uploadSession == null)
+        {
+            return null;
+        }
+
+        var uploadTask = new LargeFileUploadTask<DriveItem>(uploadSession, fileStream, UploadChunkSizeBytes, Client.RequestAdapter);
+        var result = await uploadTask.UploadAsync();
+
+        return result.UploadSucceeded ? result.ItemResponse : null;
     }
 
     public async Task<Dictionary<string, OneDriveEntry>> GetDriverItemsAsync(string folderId)

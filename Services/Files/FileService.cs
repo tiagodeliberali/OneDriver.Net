@@ -90,5 +90,17 @@ public class FileService : IFileService
         return localFiles;
     }
 
+    public Stream OpenLocalFileRead(string folderPath, string fileName)
+    {
+        var localFilePath = Path.Combine(GetLocalFolderPath(folderPath), fileName);
+
+        if (!File.Exists(localFilePath))
+        {
+            throw new FileServiceException($"File '{fileName}' does not exist in the local path '{localFilePath}'.");
+        }
+
+        return new FileStream(localFilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+    }
+
     private string GetLocalFolderPath(string folderPath) => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), this.settings.Paths.RootFolderName, folderPath);
 }
