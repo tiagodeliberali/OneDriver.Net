@@ -3,6 +3,7 @@ using OneDriver.Net.Commands;
 using OneDriver.Net.Domain;
 using OneDriver.Net.Services.Files;
 using OneDriver.Net.Services.GraphApi;
+using OneDriver.Net.Services.SyncFolders;
 
 namespace OneDriver.Net;
 
@@ -12,15 +13,17 @@ public class Application
     private readonly IGraphService graphService;
     private readonly IFileService fileService;
     private readonly RuntimeData runtimeData;
+    private readonly ISyncService syncService;
     private readonly Settings settings;
     private readonly string knownCommandsMessage;
 
-    public Application(IEnumerable<ICommand> commands, IGraphService graphService, IFileService fileService, RuntimeData runtimeData, Settings settings)
+    public Application(IEnumerable<ICommand> commands, IGraphService graphService, IFileService fileService, ISyncService syncService, RuntimeData runtimeData, Settings settings)
     {
         this.commands = commands.ToDictionary(command => command.Name);
         this.graphService = graphService;
         this.fileService = fileService;
         this.runtimeData = runtimeData;
+        this.syncService = syncService;
         this.settings = settings;
 
         knownCommandsMessage = $"Available commands:\n - {string.Join("\n - ", this.commands.Keys)}\n\nType 'help <command>' for more information on a specific command.";
@@ -45,7 +48,8 @@ public class Application
 
         while (true)
         {
-            Console.Write($"{runtimeData.GetCurrentFolderName()} >> ");
+            var syncStatus = await syncService.IsFolderListedAsync(runtimeData.GetCurrentFolderId()) ? " [SYNC]" : string.Empty;
+            Console.Write($"{runtimeData.GetCurrentFolderName()}{syncStatus} >> ");
             var choice = Console.ReadLine() ?? string.Empty;
 
             var commandArgs = choice.Split(' ', StringSplitOptions.RemoveEmptyEntries);

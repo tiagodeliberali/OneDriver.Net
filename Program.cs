@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using OneDriver.Net.Commands;
 using OneDriver.Net.Services.Files;
 using OneDriver.Net.Services.GraphApi;
+using OneDriver.Net.Services.SyncFolders;
 
 namespace OneDriver.Net;
 
@@ -33,6 +34,7 @@ internal class Program
 
         services.AddSingleton<RuntimeData>();
         services.AddSingleton<IFileService, FileService>();
+        services.AddSingleton<ISyncService, SyncService>();
         services.AddSingleton<IGraphServiceClientFactory, GraphServiceClientFactory>();
         services.AddSingleton<IGraphService, GraphService>();
 

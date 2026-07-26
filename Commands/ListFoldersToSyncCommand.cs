@@ -1,14 +1,14 @@
-using OneDriver.Net.Services.Files;
+using OneDriver.Net.Services.SyncFolders;
 
 namespace OneDriver.Net.Commands;
 
 public class ListFoldersToSyncCommand : ICommand
 {
-    private readonly IFileService fileService;
+    private readonly ISyncService syncService;
 
-    public ListFoldersToSyncCommand(IFileService fileService)
+    public ListFoldersToSyncCommand(ISyncService syncService)
     {
-        this.fileService = fileService;
+        this.syncService = syncService;
     }
 
     public string Name => "sync-list";
@@ -20,14 +20,12 @@ public class ListFoldersToSyncCommand : ICommand
 
     public async Task ExecuteAsync(string[] args)
     {
-        var configContent = fileService.GetConfigurationFile("sync_config.txt");
-        var lines = configContent.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+        var folders = await syncService.ListFoldersAsync();
 
         Console.WriteLine("Folders marked for syncing:");
-        foreach (var line in lines)
+        foreach (var folder in folders)
         {
-            var parts = line.Split(':');
-            Console.WriteLine($" - {parts[0]}");
+            Console.WriteLine($" - {folder.Path}");
         }
     }
 }

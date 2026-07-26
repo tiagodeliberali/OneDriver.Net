@@ -1,14 +1,14 @@
-using OneDriver.Net.Services.Files;
+using OneDriver.Net.Services.SyncFolders;
 
 namespace OneDriver.Net.Commands;
 
 public class RemoveFolderToSyncCommand : ICommand
 {
-    private readonly IFileService fileService;
+    private readonly ISyncService syncService;
 
-    public RemoveFolderToSyncCommand(IFileService fileService)
+    public RemoveFolderToSyncCommand(ISyncService syncService)
     {
-        this.fileService = fileService;
+        this.syncService = syncService;
     }
 
     public string Name => "sync-remove";
@@ -26,27 +26,8 @@ public class RemoveFolderToSyncCommand : ICommand
             return;
         }
         
-        var configContent = fileService.GetConfigurationFile("sync_config.txt");
         var pathToRemove = args[1];
-
-        if (configContent.IndexOf(pathToRemove) == -1)
-        {
-            Console.WriteLine($"Folder with ID {pathToRemove} is not marked for syncing.");
-            return;
-        }
-
-        var lines = configContent.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-        foreach(var line in lines)
-        {
-            if (line.StartsWith(pathToRemove + ":"))
-            {
-                configContent = configContent.Replace(line + Environment.NewLine, string.Empty);
-                configContent = configContent.Replace(line, string.Empty);
-                break;
-            }
-        }
-
-        fileService.SaveConfigurationFile("sync_config.txt", configContent);
+        await syncService.RemoveFolderAsync(pathToRemove);
 
         Console.WriteLine($"Folder {pathToRemove} removed from syncing.");
     }

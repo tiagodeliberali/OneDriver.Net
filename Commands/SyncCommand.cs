@@ -2,18 +2,21 @@ using System.Diagnostics;
 using OneDriver.Net.Domain;
 using OneDriver.Net.Services.Files;
 using OneDriver.Net.Services.GraphApi;
+using OneDriver.Net.Services.SyncFolders;
 
 namespace OneDriver.Net.Commands;
 
 public class SyncCommand : ICommand
 {
     private readonly IFileService fileService;
+    private readonly ISyncService syncService;
     private readonly IGraphService graphService;
     private readonly Settings settings;
 
-    public SyncCommand(IFileService fileService, IGraphService graphService, Settings settings)
+    public SyncCommand(IFileService fileService, ISyncService syncService, IGraphService graphService, Settings settings)
     {
         this.fileService = fileService;
+        this.syncService = syncService;
         this.graphService = graphService;
         this.settings = settings;
     }
@@ -30,23 +33,18 @@ public class SyncCommand : ICommand
     public async Task ExecuteAsync(string[] args)
     {
         Console.WriteLine("Starting synchronization of marked folders...");
-        var configContent = fileService.GetConfigurationFile("sync_config.txt");
-        var lines = configContent.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+        var foldersToSync = await syncService.ListFoldersAsync();
 
-        foreach (var line in lines)
+        foreach (var folder in foldersToSync)
         {
-            var parts = line.Split(':');
-            var folderPath = parts[0];
-            var folderId = parts[1];
-
-            var items = await graphService.GetDriverItemsAsync(folderId);
-            var localFiles = fileService.GetLocalFiles(folderPath);
+            var items = await graphService.GetDriverItemsAsync(folder.Id);
+            var localFiles = fileService.GetLocalFiles(folder.Path);
 
             var remoteFiles = items.Values.OfType<OneDriveFile>().ToList();
             var filesToDownload = remoteFiles.Where(file => !localFiles.Contains(file.Name)).ToList();
             var skippedCount = remoteFiles.Count - filesToDownload.Count;
 
-            Console.WriteLine($"Syncing folder '{folderPath}': {filesToDownload.Count} file(s) to download, {skippedCount} already present locally.");
+            Console.WriteLine($"Syncing folder '{folder.Path}': {filesToDownload.Count} file(s) to download, {skippedCount} already present locally.");
 
             var elapsedTime = Stopwatch.StartNew();
             var downloaded = 0;
@@ -67,7 +65,7 @@ public class SyncCommand : ICommand
                             return;
                         }
 
-                        await fileService.SaveFileAsync(folderPath, file.Name, file.Sha1Hash, fileStream);
+                        await fileService.SaveFileAsync(folder.Path, file.Name, file.Sha1Hash, fileStream);
                         Interlocked.Increment(ref downloaded);
                         Console.Write(".");
                     }
@@ -80,7 +78,7 @@ public class SyncCommand : ICommand
                 });
 
             elapsedTime.Stop();
-            Console.WriteLine($"{Environment.NewLine}Folder '{folderPath}': {downloaded} downloaded, {failed} failed in {elapsedTime.Elapsed.TotalSeconds:F2} seconds.");
+            Console.WriteLine($"{Environment.NewLine}Folder '{folder.Path}': {downloaded} downloaded, {failed} failed in {elapsedTime.Elapsed.TotalSeconds:F2} seconds.");
         }
 
 

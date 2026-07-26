@@ -1,13 +1,16 @@
 using OneDriver.Net.Domain;
+using OneDriver.Net.Services.SyncFolders;
 
 namespace OneDriver.Net.Commands;
 
 public class LsCommand : ICommand
 {
+    private readonly ISyncService syncService;
     private readonly RuntimeData runtimeData;
 
-    public LsCommand(RuntimeData runtimeData)
+    public LsCommand(ISyncService syncService, RuntimeData runtimeData)
     {
+        this.syncService = syncService;
         this.runtimeData = runtimeData;
     }
 
@@ -34,7 +37,8 @@ public class LsCommand : ICommand
             Console.ForegroundColor = ConsoleColor.Blue;
             foreach (var item in oneDriveItems.Where(x => x != null && x is OneDriveFolder).OrderBy(x => x.Name).Select(x => x as OneDriveFolder))
             {
-                Console.WriteLine($"[{item!.Name} - ({item.NumberOfChildren} items)]");
+                var syncStatus = await syncService.IsFolderListedAsync(runtimeData.GetCurrentFolderId()) ? " [SYNC]" : string.Empty;
+                Console.WriteLine($"[{item!.Name} - ({item.NumberOfChildren} items)]{syncStatus}");
             }
 
             Console.ForegroundColor = ConsoleColor.Yellow;
