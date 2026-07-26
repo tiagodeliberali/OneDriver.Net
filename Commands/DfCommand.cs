@@ -1,13 +1,27 @@
+using OneDriver.Net.Services.Files;
+using OneDriver.Net.Services.GraphApi;
+
 namespace OneDriver.Net.Commands;
 
 public class DfCommand : ICommand
 {
+    private readonly IGraphService graphService;
+    private readonly IFileService fileService;
+    private readonly RuntimeData runtimeData;
+
+    public DfCommand(IGraphService graphService, IFileService fileService, RuntimeData runtimeData)
+    {
+        this.graphService = graphService;
+        this.fileService = fileService;
+        this.runtimeData = runtimeData;
+    }
+
     public string GetHelp()
     {
         return "df: Download selected file from OneDrive to local machine. Usage: df <file_name>";
     }
 
-    public async Task ExecuteAsync(string[] args, RuntimeData runtimeData)
+    public async Task ExecuteAsync(string[] args)
     {
         if (args.Length < 2)
         {
@@ -15,29 +29,13 @@ public class DfCommand : ICommand
             return;
         }
 
-        var currentPath = runtimeData.GetCurrentPath();
-
-        //create path if doesn't exist
-        var localPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "OneDrive", currentPath);
-
-        if (!Directory.Exists(localPath))
-        {
-            Directory.CreateDirectory(localPath);   
-        }
-
+        var oneDrivePath = runtimeData.GetCurrentPath();
         var fileName = args[1];
         var fileId = runtimeData.GetItemIdByName(fileName);
-        var localFilePath = Path.Combine(localPath, fileName);
-
-        if (File.Exists(localFilePath))
-        {
-            Console.WriteLine($"File '{fileName}' already exists in the local path '{localFilePath}'.");
-            return;
-        }
-
+        
         try
         {
-            var fileStream = await GraphHelper.DownloadFileAsync(runtimeData.DriverId, fileId);
+            var fileStream = await graphService.DownloadFileAsync(fileId);
             
             if (fileStream == null)
             {
@@ -45,10 +43,7 @@ public class DfCommand : ICommand
                 return;
             }
 
-            using (var localFileStream = new FileStream(localFilePath, FileMode.Create, FileAccess.Write))
-            {
-                await fileStream.CopyToAsync(localFileStream);
-            }
+            var localFilePath = await fileService.SaveFileAsync(oneDrivePath, fileName, fileStream);
 
             Console.WriteLine($"File '{fileName}' downloaded successfully to '{localFilePath}'.");
         }

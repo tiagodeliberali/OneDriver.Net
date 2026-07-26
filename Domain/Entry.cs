@@ -1,4 +1,4 @@
-namespace OneDriver.Net;
+namespace OneDriver.Net.Domain;
 
 public class Entry
 {

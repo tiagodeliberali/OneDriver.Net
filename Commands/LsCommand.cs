@@ -1,13 +1,22 @@
+using OneDriver.Net.Domain;
+
 namespace OneDriver.Net.Commands;
 
 public class LsCommand : ICommand
 {
+    private readonly RuntimeData runtimeData;
+
+    public LsCommand(RuntimeData runtimeData)
+    {
+        this.runtimeData = runtimeData;
+    }
+
     public string GetHelp()
     {
         return "ls: List the contents of the current folder.";
     }
 
-    public async Task ExecuteAsync(string[] args, RuntimeData runtimeData)
+    public async Task ExecuteAsync(string[] args)
     {
         try
         {

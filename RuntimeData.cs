@@ -1,17 +1,12 @@
-namespace OneDriver.Net;
+using OneDriver.Net.Domain;
 
-public record CurrentFolder(Entry Folder, Dictionary<string, Entry> Items);
+namespace OneDriver.Net;
 
 public class RuntimeData
 {
+    record CurrentFolder(Entry Folder, Dictionary<string, Entry> Items);
+
     private readonly Stack<CurrentFolder> CurrentFolderStack = new();
-
-    public string DriverId { get; } = string.Empty;
-
-    public RuntimeData(string driverId)
-    {
-        DriverId = driverId;
-    }
 
     public void PushFolder(Entry folder, Dictionary<string, Entry> folderItems) =>
         CurrentFolderStack.Push(new CurrentFolder(folder, folderItems));

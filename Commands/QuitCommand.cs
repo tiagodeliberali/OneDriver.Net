@@ -7,7 +7,7 @@ public class QuitCommand : ICommand
         return "quit: Exit the application.";
     }
 
-    public async Task ExecuteAsync(string[] args, RuntimeData runtimeData)
+    public async Task ExecuteAsync(string[] args)
     {
         Console.WriteLine("Exiting OneDriver.Net...");
         Environment.Exit(0);
