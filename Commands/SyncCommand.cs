@@ -50,7 +50,7 @@ public class SyncCommand : ICommand
                     continue;
                 }
 
-                var fileStream = await graphService.DownloadFileAsync(file.Id);
+                await using var fileStream = await graphService.DownloadFileAsync(file.Id);
                 if (fileStream != null)
                 {
                     var localFilePath = await fileService.SaveFileAsync(folderPath, file.Name, file.Sha1Hash, fileStream);

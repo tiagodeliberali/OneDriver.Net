@@ -44,7 +44,7 @@ public class DownloadFileCommand : ICommand
         
         try
         {
-            var fileStream = await graphService.DownloadFileAsync(file.Id);
+            await using var fileStream = await graphService.DownloadFileAsync(file.Id);
             
             if (fileStream == null)
             {
