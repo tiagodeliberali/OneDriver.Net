@@ -1,6 +1,7 @@
 using Azure.Core;
 using Azure.Identity;
 using Microsoft.Graph;
+using OneDriver.Net.Services.Files;
 
 namespace OneDriver.Net.Services.GraphApi;
 
@@ -10,14 +11,14 @@ public class GraphServiceClientFactory : IGraphServiceClientFactory
     private bool hasAuthenticationRecord;
 
     private string AuthRecordPath =>
-        Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "OneDriver.Net",
-            (settings?.TokenCache.Name ?? "OneDriver.Net.TokenCache") + ".authrecord.json");
+        fileService.GetConfigurationPath(settings?.TokenCache.Name + ".authrecord.json");
 
-    public GraphServiceClientFactory(Settings settings)
+    private readonly IFileService fileService;
+
+    public GraphServiceClientFactory(Settings settings, IFileService fileService)
     {
         this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
+        this.fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
     }
 
     public async Task<GraphServiceClient> CreateGraphServiceClientAsync()

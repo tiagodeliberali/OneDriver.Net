@@ -32,14 +32,16 @@ internal class Program
             ?? throw new InvalidOperationException("Could not load app settings. See README for configuration instructions."));
 
         services.AddSingleton<RuntimeData>();
+        services.AddSingleton<IFileService, FileService>();
         services.AddSingleton<IGraphServiceClientFactory, GraphServiceClientFactory>();
         services.AddSingleton<IGraphService, GraphService>();
-        services.AddSingleton<IFileService, FileService>();
 
         services.AddTransient<ICommand, LsCommand>();
         services.AddTransient<ICommand, CdCommand>();
         services.AddTransient<ICommand, DownloadFileCommand>();
         services.AddTransient<ICommand, QuitCommand>();
+        services.AddTransient<ICommand, ListFoldersToSyncCommand>();
+        services.AddTransient<ICommand, MarkFolderToSyncCommand>();
 
         services.AddSingleton<Application>();
     }

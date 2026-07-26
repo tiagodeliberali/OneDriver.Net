@@ -10,10 +10,18 @@ public class Settings
 
     public TokenCacheSettings TokenCache { get; set; } = new();
 
+    public PathSettings Paths { get; set; } = new();
+
     public class TokenCacheSettings
     {
         public string Name { get; set; } = "OneDriver.Net.TokenCache";
 
         public bool AllowUnencryptedStorage { get; set; }
+    }
+
+    public class PathSettings
+    {
+        public string ConfigurationFolderName { get; set; } = "OneDriver.Net";
+        public string RootFolderName { get; set; } = "OneDrive";
     }
 }
