@@ -12,6 +12,8 @@ public class Settings
 
     public PathSettings Paths { get; set; } = new();
 
+    public SyncSettings Sync { get; set; } = new();
+
     public class TokenCacheSettings
     {
         public string Name { get; set; } = "OneDriver.Net.TokenCache";
@@ -23,5 +25,11 @@ public class Settings
     {
         public string ConfigurationFolderName { get; set; } = "OneDriver.Net";
         public string RootFolderName { get; set; } = "OneDrive";
+    }
+
+    public class SyncSettings
+    {
+        // Kept low on purpose: OneDrive throttles aggressive clients with HTTP 429.
+        public int MaxConcurrentDownloads { get; set; } = 8;
     }
 }

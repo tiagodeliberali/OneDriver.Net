@@ -9,14 +9,18 @@ public class SyncCommand : ICommand
 {
     private readonly IFileService fileService;
     private readonly IGraphService graphService;
+    private readonly Settings settings;
 
-    public SyncCommand(IFileService fileService, IGraphService graphService)
+    public SyncCommand(IFileService fileService, IGraphService graphService, Settings settings)
     {
         this.fileService = fileService;
         this.graphService = graphService;
+        this.settings = settings;
     }
 
     public string Name => "sync";
+
+    private int MaxConcurrentDownloads => Math.Max(1, settings.Sync.MaxConcurrentDownloads);
 
     public string GetHelp()
     {
@@ -36,34 +40,47 @@ public class SyncCommand : ICommand
             var folderId = parts[1];
 
             var items = await graphService.GetDriverItemsAsync(folderId);
-            var filesToDownload = items.Values.Where(x => x is OneDriveFile).Cast<OneDriveFile>().ToList();
-
             var localFiles = fileService.GetLocalFiles(folderPath);
 
-            Console.WriteLine($"Syncing folder '{folderPath}' with {filesToDownload.Count} files...");
-            var elapsedTime = Stopwatch.StartNew();
-            foreach (var file in filesToDownload)
-            {
-                if (localFiles.Contains(file.Name))
-                {
-                    Console.WriteLine($"Skipping '{file.Name}' (already exists locally).");
-                    continue;
-                }
+            var remoteFiles = items.Values.OfType<OneDriveFile>().ToList();
+            var filesToDownload = remoteFiles.Where(file => !localFiles.Contains(file.Name)).ToList();
+            var skippedCount = remoteFiles.Count - filesToDownload.Count;
 
-                await using var fileStream = await graphService.DownloadFileAsync(file.Id);
-                if (fileStream != null)
+            Console.WriteLine($"Syncing folder '{folderPath}': {filesToDownload.Count} file(s) to download, {skippedCount} already present locally.");
+
+            var elapsedTime = Stopwatch.StartNew();
+            var downloaded = 0;
+            var failed = 0;
+
+            await Parallel.ForEachAsync(
+                filesToDownload,
+                new ParallelOptions { MaxDegreeOfParallelism = MaxConcurrentDownloads },
+                async (file, _) =>
                 {
-                    var localFilePath = await fileService.SaveFileAsync(folderPath, file.Name, file.Sha1Hash, fileStream);
-                    //Console.WriteLine($"Downloaded '{file.Name}' to '{localFilePath}'.");
-                    Console.Write(".");
-                }
-                else
-                {
-                    Console.WriteLine($"Error: File '{file.Name}' not found in OneDrive.");
-                }
-            }
+                    try
+                    {
+                        await using var fileStream = await graphService.DownloadFileAsync(file.Id);
+                        if (fileStream == null)
+                        {
+                            Interlocked.Increment(ref failed);
+                            Console.WriteLine($"{Environment.NewLine}Error: File '{file.Name}' not found in OneDrive.");
+                            return;
+                        }
+
+                        await fileService.SaveFileAsync(folderPath, file.Name, file.Sha1Hash, fileStream);
+                        Interlocked.Increment(ref downloaded);
+                        Console.Write(".");
+                    }
+                    catch (Exception ex)
+                    {
+                        // One bad file must not abort the whole folder.
+                        Interlocked.Increment(ref failed);
+                        Console.WriteLine($"{Environment.NewLine}Error downloading '{file.Name}': {ex.Message}");
+                    }
+                });
+
             elapsedTime.Stop();
-            Console.WriteLine($"\nFolder '{folderPath}' synchronized in {elapsedTime.Elapsed.TotalSeconds:F2} seconds.");
+            Console.WriteLine($"{Environment.NewLine}Folder '{folderPath}': {downloaded} downloaded, {failed} failed in {elapsedTime.Elapsed.TotalSeconds:F2} seconds.");
         }
 
 
