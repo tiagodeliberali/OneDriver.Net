@@ -42,13 +42,13 @@ public class Application
         Console.WriteLine($"Hello, {user?.Name} ({user?.Email})!\n");
 
         runtimeData.PushFolder(
-            new OneDriveEntry("root", "root"),
+            OneDriveEntry.Root,
             await graphService.GetDriverItemsAsync("root"),
             fileService.GetLocalFiles(string.Empty));
 
         while (true)
         {
-            var syncStatus = await syncService.IsFolderListedAsync(runtimeData.GetCurrentFolderId()) ? " [SYNC]" : string.Empty;
+            var syncStatus = await syncService.IsFolderListedAsync(runtimeData.GetCurrentPath()) ? " [SYNC]" : string.Empty;
             Console.Write($"{runtimeData.GetCurrentFolderName()}{syncStatus} >> ");
             var choice = Console.ReadLine() ?? string.Empty;
 

@@ -62,11 +62,14 @@ public class FileService : IFileService
             await fileStream.CopyToAsync(cryptoStream);
         }
 
-        var computedHash = Convert.ToHexString(sha1.Hash!).ToLowerInvariant();
-        if (computedHash != sha1Hash.ToLowerInvariant())
+        if (!string.IsNullOrEmpty(sha1Hash))
         {
-            File.Delete(localFilePath);
-            throw new FileServiceException($"SHA1 hash mismatch for file '{fileName}'. Expected: {sha1Hash}, but computed: {computedHash}.");
+            var computedHash = Convert.ToHexString(sha1.Hash!).ToLowerInvariant();
+            if (computedHash != sha1Hash.ToLowerInvariant())
+            {
+                File.Delete(localFilePath);
+                throw new FileServiceException($"SHA1 hash mismatch for file '{fileName}'. Expected: {sha1Hash}, but computed: {computedHash}.");
+            }
         }
 
         return localFilePath;

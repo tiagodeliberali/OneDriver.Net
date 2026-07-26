@@ -34,12 +34,12 @@ public class MarkFolderToSyncCommand : ICommand
                 return;
             }
             await syncService.MarkFolderAsync(Path.Combine(currentPath, args[1]), item.Id);
+            Console.WriteLine($"Folder {Path.Combine(currentPath, args[1])} marked for syncing.");
         }
         else
         {
             await syncService.MarkFolderAsync(currentPath, runtimeData.GetCurrentFolderId());
+            Console.WriteLine($"Folder {currentPath} marked for syncing.");
         }
-
-        Console.WriteLine($"Folder {currentPath} marked for syncing.");
     }
 }

@@ -10,4 +10,6 @@ public class OneDriveEntry
         Name = name;
         Id = id;
     }
+
+    public static OneDriveEntry Root => new OneDriveEntry("root", "root");
 }

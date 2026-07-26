@@ -74,6 +74,6 @@ public class RuntimeData
             ? path[(firstSeparatorIndex + 1)..] 
             : path;
 
-        return modifiedPath;
+        return modifiedPath == OneDriveEntry.Root.Name ? string.Empty : modifiedPath;
     }
 }

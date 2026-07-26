@@ -35,9 +35,10 @@ public class LsCommand : ICommand
             }
 
             Console.ForegroundColor = ConsoleColor.Blue;
+            var currentFolderPath = runtimeData.GetCurrentPath();
             foreach (var item in oneDriveItems.Where(x => x != null && x is OneDriveFolder).OrderBy(x => x.Name).Select(x => x as OneDriveFolder))
             {
-                var syncStatus = await syncService.IsFolderListedAsync(runtimeData.GetCurrentFolderId()) ? " [SYNC]" : string.Empty;
+                var syncStatus = await syncService.IsFolderListedAsync(Path.Combine(currentFolderPath, item!.Name)) ? " [SYNC]" : string.Empty;
                 Console.WriteLine($"[{item!.Name} - ({item.NumberOfChildren} items)]{syncStatus}");
             }
 
@@ -49,12 +50,12 @@ public class LsCommand : ICommand
                 if (locaItems.Contains(item.Name))
                 {
                     Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine($"[local]");
+                    Console.WriteLine($" [local]");
                 }
                 else
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"[online]");
+                    Console.WriteLine($" [online]");
                 }
             }
             

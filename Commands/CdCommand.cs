@@ -32,26 +32,31 @@ public class CdCommand : ICommand
             return;
         }
 
-        var folderName = args[1];
+        var folderFullPath = args[1];
+        var currentPath = runtimeData.GetCurrentPath();
 
-        try
+        var folders = folderFullPath.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);
+        foreach (var folderName in folders)
         {
-            if (folderName == "..")
+            try
             {
-                runtimeData.PopFolder();
-                return;
+                if (folderName == "..")
+                {
+                    runtimeData.PopFolder();
+                    continue;
+                }
+
+                var folder = runtimeData.GetItemByName(folderName);
+
+                runtimeData.PushFolder(
+                    new OneDriveEntry(folderName, folder.Id), 
+                    await graphService.GetDriverItemsAsync(folder.Id),
+                    fileService.GetLocalFiles(Path.Combine(currentPath, folderName)));
             }
-
-            var folder = runtimeData.GetItemByName(folderName);
-
-            runtimeData.PushFolder(
-                new OneDriveEntry(folderName, folder.Id), 
-                await graphService.GetDriverItemsAsync(folder.Id),
-                fileService.GetLocalFiles(Path.Combine(runtimeData.GetCurrentPath(), folderName)));
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error getting folder items: {ex.Message}");
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting folder items: {ex.Message}");
+            }
         }
     }
 }
