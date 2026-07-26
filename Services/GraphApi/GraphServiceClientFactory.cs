@@ -4,7 +4,7 @@ using Microsoft.Graph;
 
 namespace OneDriver.Net.Services.GraphApi;
 
-public class GraphServiceClientFactory
+public class GraphServiceClientFactory : IGraphServiceClientFactory
 {
     private readonly Settings settings;
     private bool hasAuthenticationRecord;

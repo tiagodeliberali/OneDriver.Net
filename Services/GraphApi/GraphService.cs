@@ -5,22 +5,27 @@ namespace OneDriver.Net.Services.GraphApi;
 
 public class GraphService : IGraphService
 {
-    private readonly GraphServiceClient graphClient;
+    private readonly IGraphServiceClientFactory graphClientFactory;
+    private GraphServiceClient? graphClient;
     private string driverId = string.Empty;
 
-    public GraphService(GraphServiceClient graphClient)
+    public GraphService(IGraphServiceClientFactory graphClientFactory)
     {
-        this.graphClient = graphClient ?? throw new ArgumentNullException(nameof(graphClient));
+        this.graphClientFactory = graphClientFactory ?? throw new ArgumentNullException(nameof(graphClientFactory));
     }
 
-    public async Task LoadDriverId()
+    private GraphServiceClient Client =>
+        graphClient ?? throw new InvalidOperationException($"{nameof(GraphService)} was not initialized. Call {nameof(InitializeAsync)} first.");
+
+    public async Task InitializeAsync()
     {
-        this.driverId = await GetDriverIdAsync();
+        graphClient = await graphClientFactory.CreateGraphServiceClientAsync();
+        driverId = await GetDriverIdAsync();
     }
 
     private async Task<string> GetDriverIdAsync()
     {
-        var driver = await graphClient.Me.Drive.GetAsync((config) =>
+        var driver = await Client.Me.Drive.GetAsync((config) =>
         {
             config.QueryParameters.Select = ["id"];
         });
@@ -30,14 +35,14 @@ public class GraphService : IGraphService
 
     public async Task<Stream?> DownloadFileAsync(string fileId)
     {
-        return await graphClient.Drives[driverId].Items[fileId].Content.GetAsync();
+        return await Client.Drives[driverId].Items[fileId].Content.GetAsync();
     }
 
     public async Task<Dictionary<string, Entry>> GetDriverItemsAsync(string folderId)
     {
         var items = new Dictionary<string, Entry>();
 
-        var result = await graphClient.Drives[driverId].Items[folderId].Children.GetAsync((config) =>
+        var result = await Client.Drives[driverId].Items[folderId].Children.GetAsync((config) =>
         {
             config.QueryParameters.Select = ["id", "name", "file", "folder"];
         });
@@ -62,7 +67,7 @@ public class GraphService : IGraphService
 
     public async Task<LoggedUser?> GetUserAsync()
     {
-        var user = await graphClient.Me.GetAsync((config) =>
+        var user = await Client.Me.GetAsync((config) =>
         {
             config.QueryParameters.Select = ["displayName", "mail", "userPrincipalName"];
         });

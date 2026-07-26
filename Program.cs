@@ -1,6 +1,7 @@
-﻿using System.Runtime.InteropServices;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using OneDriver.Net.Commands;
-using OneDriver.Net.Domain;
 using OneDriver.Net.Services.Files;
 using OneDriver.Net.Services.GraphApi;
 
@@ -10,76 +11,36 @@ internal class Program
 {
     private static async Task Main(string[] args)
     {
-        Console.WriteLine("OneDriver.Net");
-        Console.WriteLine("=============\n");
+        var builder = Host.CreateApplicationBuilder(args);
 
-        var settings = Settings.LoadSettings();
+        builder.Configuration
+            .AddJsonFile("appsettings.json", optional: false)
+            .AddJsonFile("appsettings.Development.json", optional: true)
+            .AddUserSecrets<Program>();
 
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && settings.TokenCache.AllowUnencryptedStorage)
-        {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("====================================================================");
-            Console.WriteLine("   Token cache persistence is using unencrypted storage fallback.");
-            Console.WriteLine("   Use this only in trusted environments.");
-            Console.WriteLine("====================================================================\n");
-            Console.ResetColor();
-        }
+        ConfigureServices(builder.Services, builder.Configuration);
 
-        var graphServiceClientFactory = new GraphServiceClientFactory(settings);
-        var graphClient = await graphServiceClientFactory.CreateGraphServiceClientAsync();
-        
-        var fileService = new FileService();
+        using var host = builder.Build();
 
-        var graphService = new GraphService(graphClient);
-        await graphService.LoadDriverId();
+        await host.Services.GetRequiredService<Application>().RunAsync();
+    }
 
-        var user = await graphService.GetUserAsync();
-        Console.WriteLine($"Hello, {user?.Name} ({user?.Email})!\n");
+    private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddSingleton(
+            configuration.GetRequiredSection("Settings").Get<Settings>()
+            ?? throw new InvalidOperationException("Could not load app settings. See README for configuration instructions."));
 
-        var runtimeData = new RuntimeData();
-        runtimeData.PushFolder(new Entry("root", "root"), await graphService.GetDriverItemsAsync("root"));
+        services.AddSingleton<RuntimeData>();
+        services.AddSingleton<IGraphServiceClientFactory, GraphServiceClientFactory>();
+        services.AddSingleton<IGraphService, GraphService>();
+        services.AddSingleton<IFileService, FileService>();
 
-        var commands = new Dictionary<string, ICommand>
-        {
-            { "ls", new LsCommand(runtimeData) },
-            { "cd", new CdCommand(graphService, runtimeData) },
-            { "quit", new QuitCommand() },
-            { "df", new DfCommand(graphService, fileService, runtimeData) }
-        };
-        var knowCommandsMessage = $"Available commands:\n {string.Join("\n", commands.Keys)}. \n\nType 'help <command>' for more information on a specific command.";
+        services.AddTransient<ICommand, LsCommand>();
+        services.AddTransient<ICommand, CdCommand>();
+        services.AddTransient<ICommand, DfCommand>();
+        services.AddTransient<ICommand, QuitCommand>();
 
-        string choice = string.Empty;
-
-        while(true)
-        {
-            Console.Write($" {runtimeData.GetCurrentFolderName()} >> ");
-            choice = Console.ReadLine() ?? string.Empty;
-
-            var commandArgs = choice.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            if (commandArgs.Length == 0)
-                continue;
-
-            var command = commandArgs[0];
-
-            if (command == "help")
-            {
-                if (commandArgs.Length > 1 && commands.ContainsKey(commandArgs[1]))
-                {
-                    Console.WriteLine(commands[commandArgs[1]].GetHelp());
-                }
-                else
-                {
-                    Console.WriteLine(knowCommandsMessage);
-                }
-            }
-            else if (commands.ContainsKey(command))
-            {
-                await commands[command].ExecuteAsync(commandArgs);
-            }
-            else
-            {
-                Console.WriteLine($"Unknown command. {knowCommandsMessage}");
-            }
-        }
+        services.AddSingleton<Application>();
     }
 }

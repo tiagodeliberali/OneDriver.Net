@@ -14,6 +14,8 @@ public class CdCommand : ICommand
         this.runtimeData = runtimeData;
     }
 
+    public string Name => "cd";
+
     public string GetHelp()
     {
         return "cd <folder_name>: Change the current folder to the specified folder. Use cd .. to navigate to the parent folder.";

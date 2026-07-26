@@ -11,6 +11,8 @@ public class LsCommand : ICommand
         this.runtimeData = runtimeData;
     }
 
+    public string Name => "ls";
+
     public string GetHelp()
     {
         return "ls: List the contents of the current folder.";

@@ -2,6 +2,8 @@ namespace OneDriver.Net.Commands;
 
 public class QuitCommand : ICommand
 {
+    public string Name => "quit";
+
     public string GetHelp()
     {
         return "quit: Exit the application.";

@@ -16,6 +16,8 @@ public class DfCommand : ICommand
         this.runtimeData = runtimeData;
     }
 
+    public string Name => "df";
+
     public string GetHelp()
     {
         return "df: Download selected file from OneDrive to local machine. Usage: df <file_name>";
