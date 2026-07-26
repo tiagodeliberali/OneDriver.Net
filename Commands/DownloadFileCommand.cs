@@ -1,3 +1,4 @@
+using OneDriver.Net.Domain;
 using OneDriver.Net.Services.Files;
 using OneDriver.Net.Services.GraphApi;
 
@@ -33,11 +34,17 @@ public class DownloadFileCommand : ICommand
 
         var oneDrivePath = runtimeData.GetCurrentPath();
         var fileName = args[1];
-        var fileId = runtimeData.GetItemIdByName(fileName);
+        var file = runtimeData.GetItemByName(fileName);
+
+        if (file == null || file is not OneDriveFile)
+        {
+            Console.WriteLine($"Error: File '{fileName}' not found in the current folder.");
+            return;
+        }
         
         try
         {
-            var fileStream = await graphService.DownloadFileAsync(fileId);
+            var fileStream = await graphService.DownloadFileAsync(file.Id);
             
             if (fileStream == null)
             {
@@ -45,7 +52,7 @@ public class DownloadFileCommand : ICommand
                 return;
             }
 
-            var localFilePath = await fileService.SaveFileAsync(oneDrivePath, fileName, fileStream);
+            var localFilePath = await fileService.SaveFileAsync(oneDrivePath, fileName, ((OneDriveFile)file).Sha1Hash, fileStream);
 
             Console.WriteLine($"File '{fileName}' downloaded successfully to '{localFilePath}'.");
         }

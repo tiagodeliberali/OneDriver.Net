@@ -30,7 +30,7 @@ public class RuntimeData
         return [.. CurrentFolderStack.Peek().Items.Values];
     }
 
-    public string GetItemIdByName(string itemName)
+    public OneDriveEntry GetItemByName(string itemName)
     {
         if (CurrentFolderStack.Count == 0)
         {
@@ -41,7 +41,7 @@ public class RuntimeData
 
         if (currentFolderItems.TryGetValue(itemName, out var entry))
         {
-            return entry.Id;
+            return entry;
         }
         else
         {

@@ -39,9 +39,9 @@ public class CdCommand : ICommand
                 return;
             }
 
-            var folderId = runtimeData.GetItemIdByName(folderName);
-            var result = await graphService.GetDriverItemsAsync(folderId);
-            runtimeData.PushFolder(new OneDriveEntry(folderName, folderId), result);
+            var folder = runtimeData.GetItemByName(folderName);
+            var result = await graphService.GetDriverItemsAsync(folder.Id);
+            runtimeData.PushFolder(new OneDriveEntry(folderName, folder.Id), result);
         }
         catch (Exception ex)
         {

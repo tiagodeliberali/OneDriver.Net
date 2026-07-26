@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+
 namespace OneDriver.Net.Services.Files;
 
 public class FileService : IFileService
@@ -37,9 +39,9 @@ public class FileService : IFileService
         File.WriteAllText(configPath, configContent);
     }
 
-    public async Task<string> SaveFileAsync(string onedriveFilePath, string fileName, Stream fileStream)
+    public async Task<string> SaveFileAsync(string onedriveFilePath, string fileName, string sha1Hash, Stream fileStream)
     {
-        var localPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), this.settings.Paths.RootFolderName, onedriveFilePath);
+        var localPath = GetLocalFolderPath(onedriveFilePath);
         if (!Directory.Exists(localPath))
         {
             Directory.CreateDirectory(localPath);   
@@ -52,9 +54,38 @@ public class FileService : IFileService
             throw new FileServiceException($"File '{fileName}' already exists in the local path '{localFilePath}'.");
         }
 
-        using var fileStreamToWrite = new FileStream(localFilePath, FileMode.Create, FileAccess.Write);
-        await fileStream.CopyToAsync(fileStreamToWrite);
+        // write the file while computing its SHA1 hash, so the source stream is only read once
+        using var sha1 = SHA1.Create();
+        await using (var fileStreamToWrite = new FileStream(localFilePath, FileMode.Create, FileAccess.Write))
+        await using (var cryptoStream = new CryptoStream(fileStreamToWrite, sha1, CryptoStreamMode.Write, leaveOpen: true))
+        {
+            await fileStream.CopyToAsync(cryptoStream);
+        }
+
+        var computedHash = Convert.ToHexString(sha1.Hash!).ToLowerInvariant();
+        if (computedHash != sha1Hash.ToLowerInvariant())
+        {
+            File.Delete(localFilePath);
+            throw new FileServiceException($"SHA1 hash mismatch for file '{fileName}'. Expected: {sha1Hash}, but computed: {computedHash}.");
+        }
 
         return localFilePath;
     }
+
+    public HashSet<string> GetLocalFiles(string folderPath)
+    {
+        var localPath = GetLocalFolderPath(folderPath);
+        var localFiles = new HashSet<string>();
+        if (Directory.Exists(localPath))
+        {
+            foreach (var file in Directory.GetFiles(localPath))
+            {
+                localFiles.Add(Path.GetFileName(file));
+            }
+        }
+
+        return localFiles;
+    }
+
+    private string GetLocalFolderPath(string folderPath) => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), this.settings.Paths.RootFolderName, folderPath);
 }
