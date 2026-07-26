@@ -30,7 +30,7 @@ public class SyncCommand : ICommand
         return "sync: Synchronize the marked folders with OneDrive.";
     }
 
-    public async Task ExecuteAsync(string[] args)
+    public async Task ExecuteAsync(string _)
     {
         Console.WriteLine("Starting synchronization of marked folders...");
         var foldersToSync = await syncService.ListFoldersAsync();

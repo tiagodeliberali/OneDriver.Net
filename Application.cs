@@ -52,7 +52,7 @@ public class Application
             Console.Write($"{runtimeData.GetCurrentFolderName()}{syncStatus} >> ");
             var choice = Console.ReadLine() ?? string.Empty;
 
-            var commandArgs = choice.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            var commandArgs = choice.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
             if (commandArgs.Length == 0)
                 continue;
 
@@ -71,7 +71,7 @@ public class Application
             }
             else if (commands.TryGetValue(command, out var selectedCommand))
             {
-                await selectedCommand.ExecuteAsync(commandArgs);
+                await selectedCommand.ExecuteAsync(commandArgs.Length > 1 ? commandArgs[1].Trim() : string.Empty);
             }
             else
             {

@@ -24,20 +24,19 @@ public class MarkSubFolderToSyncCommand : ICommand
         return "mark-all <folder?>: Mark the current folder or specified folder and all its subfolders to be synced.";
     }
 
-    public async Task ExecuteAsync(string[] args)
+    public async Task ExecuteAsync(string folderName)
     {
         var currentPath = runtimeData.GetCurrentPath();
         
-        if (args.Length > 1)
+        if (!string.IsNullOrEmpty(folderName))
         {
-            var folderName = string.Join(" ", args.Skip(1));
-            var item = runtimeData.GetItemByName(folderName);
+            var item = runtimeData.GetItemByName((string)folderName);
             if (item is not OneDriveFolder)
             {
                 Console.WriteLine($"{item.Name} is not a folder and can't be marked to sync");
                 return;
             }
-            await ProcessSubFolders(Path.Combine(currentPath, folderName), item.Id);
+            await ProcessSubFolders(Path.Combine(currentPath, (string)folderName), item.Id);
         }
         else
         {

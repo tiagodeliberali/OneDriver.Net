@@ -4,5 +4,5 @@ public interface ICommand
 {
     string Name { get; }
     string GetHelp();
-    Task ExecuteAsync(string[] args);
+    Task ExecuteAsync(string args);
 }

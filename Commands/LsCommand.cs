@@ -21,7 +21,7 @@ public class LsCommand : ICommand
         return "ls: List the contents of the current folder.";
     }
 
-    public async Task ExecuteAsync(string[] args)
+    public async Task ExecuteAsync(string _)
     {
         try
         {

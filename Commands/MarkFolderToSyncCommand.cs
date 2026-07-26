@@ -21,13 +21,12 @@ public class MarkFolderToSyncCommand : ICommand
         return "mark <folder?>: Mark the current folder or specified folder to be synced.";
     }
 
-    public async Task ExecuteAsync(string[] args)
+    public async Task ExecuteAsync(string folderName)
     {
         var currentPath = runtimeData.GetCurrentPath();
         
-        if (args.Length > 1)
+        if (!string.IsNullOrEmpty(folderName))
         {
-            var folderName = string.Join(" ", args.Skip(1));
             var item = runtimeData.GetItemByName(folderName);
             if (item is not OneDriveFolder)
             {

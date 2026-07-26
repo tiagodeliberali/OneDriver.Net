@@ -24,15 +24,14 @@ public class CdCommand : ICommand
         return "cd <folder_name>: Change the current folder to the specified folder. Use cd .. to navigate to the parent folder.";
     }
 
-    public async Task ExecuteAsync(string[] args)
+    public async Task ExecuteAsync(string folderFullPath)
     {
-        if (args.Length < 2)
+        if (string.IsNullOrWhiteSpace(folderFullPath))
         {
             Console.WriteLine("Usage: cd <folder>");
             return;
         }
 
-        var folderFullPath = args[1];
         var currentPath = runtimeData.GetCurrentPath();
 
         var folders = folderFullPath.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);

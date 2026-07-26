@@ -18,15 +18,14 @@ public class RemoveFolderToSyncCommand : ICommand
         return "sync-remove: Remove the specified folder from syncing.";
     }
 
-    public async Task ExecuteAsync(string[] args)
+    public async Task ExecuteAsync(string pathToRemove)
     {
-        if (args.Length < 2)
+        if (string.IsNullOrEmpty(pathToRemove))
         {
             Console.WriteLine("Usage: sync-remove <path_to_remove>");
             return;
         }
-        
-        var pathToRemove = string.Join(" ", args.Skip(1));
+
         await syncService.RemoveFolderAsync(pathToRemove);
 
         Console.WriteLine($"Folder {pathToRemove} removed from syncing.");

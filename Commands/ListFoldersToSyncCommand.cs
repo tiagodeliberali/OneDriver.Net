@@ -18,7 +18,7 @@ public class ListFoldersToSyncCommand : ICommand
         return "sync-list: List all folders marked for syncing.";
     }
 
-    public async Task ExecuteAsync(string[] args)
+    public async Task ExecuteAsync(string _)
     {
         var folders = await syncService.ListFoldersAsync();
 

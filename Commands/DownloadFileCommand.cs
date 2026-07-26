@@ -24,17 +24,16 @@ public class DownloadFileCommand : ICommand
         return "df: Download selected file from OneDrive to local machine. Usage: df <file_name>";
     }
 
-    public async Task ExecuteAsync(string[] args)
+    public async Task ExecuteAsync(string fileName)
     {
-        if (args.Length < 2)
+        if (string.IsNullOrWhiteSpace(fileName))
         {
             Console.WriteLine("Usage: df <item_name>");
             return;
         }
 
         var oneDrivePath = runtimeData.GetCurrentPath();
-        var fileName = args[1];
-        var file = runtimeData.GetItemByName(fileName);
+        var file = runtimeData.GetItemByName((string)fileName);
 
         if (file == null || file is not OneDriveFile)
         {
@@ -52,7 +51,7 @@ public class DownloadFileCommand : ICommand
                 return;
             }
 
-            var localFilePath = await fileService.SaveFileAsync(oneDrivePath, fileName, ((OneDriveFile)file).Sha1Hash, fileStream);
+            var localFilePath = await fileService.SaveFileAsync(oneDrivePath, (string)fileName, ((OneDriveFile)file).Sha1Hash, fileStream);
 
             Console.WriteLine($"File '{fileName}' downloaded successfully to '{localFilePath}'.");
         }
