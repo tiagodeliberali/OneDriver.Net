@@ -1,3 +1,4 @@
+using OneDriver.Net.Domain;
 using OneDriver.Net.Services.Files;
 
 namespace OneDriver.Net.Commands;
@@ -17,14 +18,29 @@ public class MarkFolderToSyncCommand : ICommand
 
     public string GetHelp()
     {
-        return "mark: Mark the current folder to be synced.";
+        return "mark <folder?>: Mark the current folder or specified folder to be synced.";
     }
 
     public async Task ExecuteAsync(string[] args)
     {
-        var configContent = fileService.GetConfigurationFile("sync_config.txt");
         var currentPath = runtimeData.GetCurrentPath();
-        var newConfig = $"{currentPath}:{runtimeData.GetCurrentFolderId()}";
+        var configContent = fileService.GetConfigurationFile("sync_config.txt");
+
+        var newConfig = string.Empty;
+        if (args.Length > 1)
+        {
+            var item = runtimeData.GetItemByName(args[1]);
+            if (item is not OneDriveFolder)
+            {
+                Console.WriteLine($"{item.Name} is not a foler and can't be marked to sync");
+                return;
+            }
+            newConfig = $"{Path.Combine(currentPath, args[1])}:{item.Id}";
+        }
+        else
+        {
+            newConfig = $"{currentPath}:{runtimeData.GetCurrentFolderId()}";
+        }
 
         if (configContent.IndexOf(newConfig) != -1)
         {

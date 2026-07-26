@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using OneDriver.Net.Commands;
 using OneDriver.Net.Domain;
+using OneDriver.Net.Services.Files;
 using OneDriver.Net.Services.GraphApi;
 
 namespace OneDriver.Net;
@@ -9,14 +10,16 @@ public class Application
 {
     private readonly IReadOnlyDictionary<string, ICommand> commands;
     private readonly IGraphService graphService;
+    private readonly IFileService fileService;
     private readonly RuntimeData runtimeData;
     private readonly Settings settings;
     private readonly string knownCommandsMessage;
 
-    public Application(IEnumerable<ICommand> commands, IGraphService graphService, RuntimeData runtimeData, Settings settings)
+    public Application(IEnumerable<ICommand> commands, IGraphService graphService, IFileService fileService, RuntimeData runtimeData, Settings settings)
     {
         this.commands = commands.ToDictionary(command => command.Name);
         this.graphService = graphService;
+        this.fileService = fileService;
         this.runtimeData = runtimeData;
         this.settings = settings;
 
@@ -35,7 +38,10 @@ public class Application
         var user = await graphService.GetUserAsync();
         Console.WriteLine($"Hello, {user?.Name} ({user?.Email})!\n");
 
-        runtimeData.PushFolder(new OneDriveEntry("root", "root"), await graphService.GetDriverItemsAsync("root"));
+        runtimeData.PushFolder(
+            new OneDriveEntry("root", "root"),
+            await graphService.GetDriverItemsAsync("root"),
+            fileService.GetLocalFiles(string.Empty));
 
         while (true)
         {

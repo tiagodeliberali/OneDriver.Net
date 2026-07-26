@@ -4,12 +4,12 @@ namespace OneDriver.Net;
 
 public class RuntimeData
 {
-    record CurrentFolder(OneDriveEntry Folder, Dictionary<string, OneDriveEntry> Items);
+    record CurrentFolder(OneDriveEntry Folder, Dictionary<string, OneDriveEntry> OneDriveItems, HashSet<string> LocalItems);
 
     private readonly Stack<CurrentFolder> CurrentFolderStack = new();
 
-    public void PushFolder(OneDriveEntry folder, Dictionary<string, OneDriveEntry> folderItems) =>
-        CurrentFolderStack.Push(new CurrentFolder(folder, folderItems));
+    public void PushFolder(OneDriveEntry folder, Dictionary<string, OneDriveEntry> folderItems, HashSet<string> localItems) =>
+        CurrentFolderStack.Push(new CurrentFolder(folder, folderItems, localItems));
 
     public void PopFolder() 
     {
@@ -20,14 +20,24 @@ public class RuntimeData
         }
     }
 
-    public List<OneDriveEntry> GetCurrentFolderItems()
+    public List<OneDriveEntry> GetCurrentFolderOneDriveItems()
     {
         if (CurrentFolderStack.Count == 0)
         {
             return [];
         }
 
-        return [.. CurrentFolderStack.Peek().Items.Values];
+        return [.. CurrentFolderStack.Peek().OneDriveItems.Values];
+    }
+
+    public HashSet<string> GetCurrentFolderLocalItems()
+    {
+        if (CurrentFolderStack.Count == 0)
+        {
+            return new HashSet<string>();
+        }
+
+        return CurrentFolderStack.Peek().LocalItems;
     }
 
     public OneDriveEntry GetItemByName(string itemName)
@@ -37,7 +47,7 @@ public class RuntimeData
             throw new InvalidOperationException("No folder is currently loaded.");
         }
 
-        var currentFolderItems = CurrentFolderStack.Peek().Items;
+        var currentFolderItems = CurrentFolderStack.Peek().OneDriveItems;
 
         if (currentFolderItems.TryGetValue(itemName, out var entry))
         {

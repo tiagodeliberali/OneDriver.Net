@@ -22,24 +22,36 @@ public class LsCommand : ICommand
     {
         try
         {
-            var currentItems = runtimeData.GetCurrentFolderItems();
+            var oneDriveItems = runtimeData.GetCurrentFolderOneDriveItems();
+            var locaItems = runtimeData.GetCurrentFolderLocalItems();
 
-            if (currentItems.Count == 0)
+            if (oneDriveItems.Count == 0)
             {
                 Console.WriteLine("No items found.");
                 return;
             }
 
             Console.ForegroundColor = ConsoleColor.Blue;
-            foreach (var item in currentItems.Where(x => x != null && x is OneDriveFolder).OrderBy(x => x.Name).Select(x => x as OneDriveFolder))
+            foreach (var item in oneDriveItems.Where(x => x != null && x is OneDriveFolder).OrderBy(x => x.Name).Select(x => x as OneDriveFolder))
             {
                 Console.WriteLine($"[{item!.Name} - ({item.NumberOfChildren} items)]");
             }
 
             Console.ForegroundColor = ConsoleColor.Yellow;
-            foreach (var item in currentItems.Where(x => x != null && x is not OneDriveFolder).OrderBy(x => x.Name))
+            foreach (var item in oneDriveItems.Where(x => x != null && x is not OneDriveFolder).OrderBy(x => x.Name))
             {
-                Console.WriteLine($"{item.Name}");
+                Console.Write($"{item.Name}");
+                
+                if (locaItems.Contains(item.Name))
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine($"[local]");
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"[online]");
+                }
             }
             
             Console.ResetColor();

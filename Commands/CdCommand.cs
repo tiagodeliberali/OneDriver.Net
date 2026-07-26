@@ -1,4 +1,5 @@
 using OneDriver.Net.Domain;
+using OneDriver.Net.Services.Files;
 using OneDriver.Net.Services.GraphApi;
 
 namespace OneDriver.Net.Commands;
@@ -6,11 +7,13 @@ namespace OneDriver.Net.Commands;
 public class CdCommand : ICommand
 {
     private readonly IGraphService graphService;
+    private readonly IFileService fileService;
     private readonly RuntimeData runtimeData;
 
-    public CdCommand(IGraphService graphService, RuntimeData runtimeData)
+    public CdCommand(IGraphService graphService, IFileService fileService, RuntimeData runtimeData)
     {
         this.graphService = graphService;
+        this.fileService = fileService;
         this.runtimeData = runtimeData;
     }
 
@@ -40,8 +43,11 @@ public class CdCommand : ICommand
             }
 
             var folder = runtimeData.GetItemByName(folderName);
-            var result = await graphService.GetDriverItemsAsync(folder.Id);
-            runtimeData.PushFolder(new OneDriveEntry(folderName, folder.Id), result);
+
+            runtimeData.PushFolder(
+                new OneDriveEntry(folderName, folder.Id), 
+                await graphService.GetDriverItemsAsync(folder.Id),
+                fileService.GetLocalFiles(Path.Combine(runtimeData.GetCurrentPath(), folderName)));
         }
         catch (Exception ex)
         {
