@@ -27,14 +27,15 @@ public class MarkFolderToSyncCommand : ICommand
         
         if (args.Length > 1)
         {
-            var item = runtimeData.GetItemByName(args[1]);
+            var folderName = string.Join(" ", args.Skip(1));
+            var item = runtimeData.GetItemByName(folderName);
             if (item is not OneDriveFolder)
             {
                 Console.WriteLine($"{item.Name} is not a folder and can't be marked to sync");
                 return;
             }
-            await syncService.MarkFolderAsync(Path.Combine(currentPath, args[1]), item.Id);
-            Console.WriteLine($"Folder {Path.Combine(currentPath, args[1])} marked for syncing.");
+            await syncService.MarkFolderAsync(Path.Combine(currentPath, folderName), item.Id);
+            Console.WriteLine($"Folder {Path.Combine(currentPath, folderName)} marked for syncing.");
         }
         else
         {

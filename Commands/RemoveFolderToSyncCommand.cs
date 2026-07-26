@@ -26,7 +26,7 @@ public class RemoveFolderToSyncCommand : ICommand
             return;
         }
         
-        var pathToRemove = args[1];
+        var pathToRemove = string.Join(" ", args.Skip(1));
         await syncService.RemoveFolderAsync(pathToRemove);
 
         Console.WriteLine($"Folder {pathToRemove} removed from syncing.");
