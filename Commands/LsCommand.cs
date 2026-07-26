@@ -31,13 +31,13 @@ public class LsCommand : ICommand
             }
 
             Console.ForegroundColor = ConsoleColor.Blue;
-            foreach (var item in currentItems.Where(x => x != null && x is Folder).OrderBy(x => x.Name).Select(x => x as Folder))
+            foreach (var item in currentItems.Where(x => x != null && x is OneDriveFolder).OrderBy(x => x.Name).Select(x => x as OneDriveFolder))
             {
                 Console.WriteLine($"[{item!.Name} - ({item.NumberOfChildren} items)]");
             }
 
             Console.ForegroundColor = ConsoleColor.Yellow;
-            foreach (var item in currentItems.Where(x => x != null && x is not Folder).OrderBy(x => x.Name))
+            foreach (var item in currentItems.Where(x => x != null && x is not OneDriveFolder).OrderBy(x => x.Name))
             {
                 Console.WriteLine($"{item.Name}");
             }

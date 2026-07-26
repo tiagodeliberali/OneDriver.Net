@@ -38,9 +38,9 @@ public class GraphService : IGraphService
         return await Client.Drives[driverId].Items[fileId].Content.GetAsync();
     }
 
-    public async Task<Dictionary<string, Entry>> GetDriverItemsAsync(string folderId)
+    public async Task<Dictionary<string, OneDriveEntry>> GetDriverItemsAsync(string folderId)
     {
-        var items = new Dictionary<string, Entry>();
+        var items = new Dictionary<string, OneDriveEntry>();
 
         var result = await Client.Drives[driverId].Items[folderId].Children.GetAsync((config) =>
         {
@@ -53,11 +53,15 @@ public class GraphService : IGraphService
             {
                 if (item.Folder != null)
                 {
-                    items[item.Name!] = new Folder(item.Name!, item.Id!, item.Folder.ChildCount ?? 0);
+                    items[item.Name!] = new OneDriveFolder(item.Name!, item.Id!, item.Folder.ChildCount ?? 0);
+                }
+                else if (item.File != null)
+                {
+                    items[item.Name!] = new OneDriveFile(item.Name!, item.Id!, item.File.MimeType ?? string.Empty, item.File.Hashes?.Sha1Hash ?? string.Empty);
                 }
                 else
                 {
-                    items[item.Name!] = new Entry(item.Name!, item.Id!);
+                    items[item.Name!] = new OneDriveEntry(item.Name!, item.Id!);
                 }
             }
         }

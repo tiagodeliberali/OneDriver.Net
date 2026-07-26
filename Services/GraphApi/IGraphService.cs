@@ -6,6 +6,6 @@ public interface IGraphService
 {
     Task InitializeAsync();
     Task<Stream?> DownloadFileAsync(string fileId);
-    Task<Dictionary<string, Entry>> GetDriverItemsAsync(string folderId);
+    Task<Dictionary<string, OneDriveEntry>> GetDriverItemsAsync(string folderId);
     Task<LoggedUser?> GetUserAsync();
 }

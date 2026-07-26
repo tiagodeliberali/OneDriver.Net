@@ -41,7 +41,7 @@ public class CdCommand : ICommand
 
             var folderId = runtimeData.GetItemIdByName(folderName);
             var result = await graphService.GetDriverItemsAsync(folderId);
-            runtimeData.PushFolder(new Entry(folderName, folderId), result);
+            runtimeData.PushFolder(new OneDriveEntry(folderName, folderId), result);
         }
         catch (Exception ex)
         {

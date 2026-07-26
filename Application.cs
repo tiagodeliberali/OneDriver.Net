@@ -35,7 +35,7 @@ public class Application
         var user = await graphService.GetUserAsync();
         Console.WriteLine($"Hello, {user?.Name} ({user?.Email})!\n");
 
-        runtimeData.PushFolder(new Entry("root", "root"), await graphService.GetDriverItemsAsync("root"));
+        runtimeData.PushFolder(new OneDriveEntry("root", "root"), await graphService.GetDriverItemsAsync("root"));
 
         while (true)
         {

@@ -4,11 +4,11 @@ namespace OneDriver.Net;
 
 public class RuntimeData
 {
-    record CurrentFolder(Entry Folder, Dictionary<string, Entry> Items);
+    record CurrentFolder(OneDriveEntry Folder, Dictionary<string, OneDriveEntry> Items);
 
     private readonly Stack<CurrentFolder> CurrentFolderStack = new();
 
-    public void PushFolder(Entry folder, Dictionary<string, Entry> folderItems) =>
+    public void PushFolder(OneDriveEntry folder, Dictionary<string, OneDriveEntry> folderItems) =>
         CurrentFolderStack.Push(new CurrentFolder(folder, folderItems));
 
     public void PopFolder() 
@@ -20,7 +20,7 @@ public class RuntimeData
         }
     }
 
-    public List<Entry> GetCurrentFolderItems()
+    public List<OneDriveEntry> GetCurrentFolderItems()
     {
         if (CurrentFolderStack.Count == 0)
         {
