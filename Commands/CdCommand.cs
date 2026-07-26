@@ -25,7 +25,7 @@ public class CdCommand : ICommand
     {
         if (args.Length < 2)
         {
-            Console.WriteLine("Usage: cd <folderId>");
+            Console.WriteLine("Usage: cd <folder>");
             return;
         }
 
