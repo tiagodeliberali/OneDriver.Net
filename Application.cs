@@ -20,7 +20,7 @@ public class Application
         this.runtimeData = runtimeData;
         this.settings = settings;
 
-        knownCommandsMessage = $"Available commands:\n {string.Join("\n", this.commands.Keys)}. \n\nType 'help <command>' for more information on a specific command.";
+        knownCommandsMessage = $"Available commands:\n - {string.Join("\n - ", this.commands.Keys)}\n\nType 'help <command>' for more information on a specific command.";
     }
 
     public async Task RunAsync()
@@ -39,7 +39,7 @@ public class Application
 
         while (true)
         {
-            Console.Write($" {runtimeData.GetCurrentFolderName()} >> ");
+            Console.Write($"{runtimeData.GetCurrentFolderName()} >> ");
             var choice = Console.ReadLine() ?? string.Empty;
 
             var commandArgs = choice.Split(' ', StringSplitOptions.RemoveEmptyEntries);

@@ -3,13 +3,13 @@ using OneDriver.Net.Services.GraphApi;
 
 namespace OneDriver.Net.Commands;
 
-public class DfCommand : ICommand
+public class DownloadFileCommand : ICommand
 {
     private readonly IGraphService graphService;
     private readonly IFileService fileService;
     private readonly RuntimeData runtimeData;
 
-    public DfCommand(IGraphService graphService, IFileService fileService, RuntimeData runtimeData)
+    public DownloadFileCommand(IGraphService graphService, IFileService fileService, RuntimeData runtimeData)
     {
         this.graphService = graphService;
         this.fileService = fileService;

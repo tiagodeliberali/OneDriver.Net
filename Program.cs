@@ -38,7 +38,7 @@ internal class Program
 
         services.AddTransient<ICommand, LsCommand>();
         services.AddTransient<ICommand, CdCommand>();
-        services.AddTransient<ICommand, DfCommand>();
+        services.AddTransient<ICommand, DownloadFileCommand>();
         services.AddTransient<ICommand, QuitCommand>();
 
         services.AddSingleton<Application>();

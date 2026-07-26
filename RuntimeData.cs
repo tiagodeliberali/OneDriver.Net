@@ -20,8 +20,6 @@ public class RuntimeData
         }
     }
 
-    public string GetCurrentFolderName() => CurrentFolderStack.Count > 0 ? CurrentFolderStack.Peek().Folder.Name : string.Empty;
-
     public List<Entry> GetCurrentFolderItems()
     {
         if (CurrentFolderStack.Count == 0)
@@ -50,6 +48,10 @@ public class RuntimeData
             throw new KeyNotFoundException($"Item '{itemName}' not found in the current folder.");
         }
     }
+
+    public string GetCurrentFolderName() => CurrentFolderStack.Count > 0 ? CurrentFolderStack.Peek().Folder.Name : string.Empty;
+
+    public string GetCurrentFolderId() => CurrentFolderStack.Count > 0 ? CurrentFolderStack.Peek().Folder.Id : string.Empty;
 
     public string GetCurrentPath()
     {
