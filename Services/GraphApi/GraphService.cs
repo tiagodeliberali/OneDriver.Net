@@ -1,10 +1,13 @@
 using Microsoft.Graph;
+using Microsoft.Graph.Models;
 using OneDriver.Net.Domain;
 
 namespace OneDriver.Net.Services.GraphApi;
 
 public class GraphService : IGraphService
 {
+    private const int PageSize = 200;
+
     private readonly IGraphServiceClientFactory graphClientFactory;
     private GraphServiceClient? graphClient;
     private string driverId = string.Empty;
@@ -42,31 +45,56 @@ public class GraphService : IGraphService
     {
         var items = new Dictionary<string, OneDriveEntry>();
 
-        var result = await Client.Drives[driverId].Items[folderId].Children.GetAsync((config) =>
+        var firstPage = await Client.Drives[driverId].Items[folderId].Children.GetAsync((config) =>
         {
             config.QueryParameters.Select = ["id", "name", "file", "folder"];
+            config.QueryParameters.Top = PageSize;
         });
 
-        if (result?.Value != null)
+        if (firstPage == null)
         {
-            foreach (var item in result.Value.Where(i => i != null && i.Name != null && i.Id != null))
-            {
-                if (item.Folder != null)
-                {
-                    items[item.Name!] = new OneDriveFolder(item.Name!, item.Id!, item.Folder.ChildCount ?? 0);
-                }
-                else if (item.File != null)
-                {
-                    items[item.Name!] = new OneDriveFile(item.Name!, item.Id!, item.File.MimeType ?? string.Empty, item.File.Hashes?.Sha1Hash ?? string.Empty);
-                }
-                else
-                {
-                    items[item.Name!] = new OneDriveEntry(item.Name!, item.Id!);
-                }
-            }
+            return items;
         }
 
+        // Graph pages driveItem children (200 per page by default), so every page must be
+        // followed via @odata.nextLink or large folders would be silently truncated.
+        var pageIterator = PageIterator<DriveItem, DriveItemCollectionResponse>.CreatePageIterator(
+            Client,
+            firstPage,
+            item =>
+            {
+                var entry = ToOneDriveEntry(item);
+                if (entry != null)
+                {
+                    items[entry.Name] = entry;
+                }
+
+                return true;
+            });
+
+        await pageIterator.IterateAsync();
+
         return items;
+    }
+
+    private static OneDriveEntry? ToOneDriveEntry(DriveItem? item)
+    {
+        if (item?.Name == null || item.Id == null)
+        {
+            return null;
+        }
+
+        if (item.Folder != null)
+        {
+            return new OneDriveFolder(item.Name, item.Id, item.Folder.ChildCount ?? 0);
+        }
+
+        if (item.File != null)
+        {
+            return new OneDriveFile(item.Name, item.Id, item.File.MimeType ?? string.Empty, item.File.Hashes?.Sha1Hash ?? string.Empty);
+        }
+
+        return new OneDriveEntry(item.Name, item.Id);
     }
 
     public async Task<LoggedUser?> GetUserAsync()
