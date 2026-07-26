@@ -5,12 +5,10 @@ namespace OneDriver.Net.Commands;
 public class RemoveFolderToSyncCommand : ICommand
 {
     private readonly IFileService fileService;
-    private readonly RuntimeData runtimeData;
 
-    public RemoveFolderToSyncCommand(IFileService fileService, RuntimeData runtimeData)
+    public RemoveFolderToSyncCommand(IFileService fileService)
     {
         this.fileService = fileService;
-        this.runtimeData = runtimeData;
     }
 
     public string Name => "sync-remove";
