@@ -102,5 +102,5 @@ public class FileService : IFileService
         return new FileStream(localFilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
     }
 
-    private string GetLocalFolderPath(string folderPath) => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), this.settings.Paths.RootFolderName, folderPath);
+    public string GetLocalFolderPath(string folderPath) => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), this.settings.Paths.RootFolderName, folderPath);
 }

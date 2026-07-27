@@ -8,4 +8,5 @@ public interface IFileService
     void SaveConfigurationFile(string fileName, string configContent);
     HashSet<string> GetLocalFiles(string folderPath);
     Stream OpenLocalFileRead(string folderPath, string fileName);
+    string GetLocalFolderPath(string folderPath);
 }

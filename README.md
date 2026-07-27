@@ -38,7 +38,7 @@ It is a work in progress, and I don't encourage you to use my project instead of
 | | OneDriver.Net | [abraunegg/onedrive](https://github.com/abraunegg/onedrive) | [OneDriver (jstaf)](https://github.com/jstaf/onedriver) | rclone |
 |---|---|---|---|---|
 | Model | Interactive shell + on-demand sync | Background daemon / monitor mode | FUSE filesystem | CLI transfer tool |
-| Always-running process | No | Yes (for live sync) | Yes (mount) | No |
+| Always-running process | No (opt-in `monitor` while the shell is open) | Yes (for live sync) | Yes (mount) | No |
 | Browse before downloading | Yes (`ls` / `cd` over Graph API) | No (config-file driven) | Yes (via mount) | Yes (`rclone ls`) |
 | Selective sync setup | Interactive `mark` / `mark-all` while browsing | Hand-written `sync_list` patterns | N/A (everything is virtual) | Per-command paths |
 | Works offline with local copies | Yes — plain files in `~/OneDrive` | Yes | Only cached files; stale mount when offline | Yes |
@@ -55,7 +55,7 @@ It is a work in progress, and I don't encourage you to use my project instead of
 - **Throttle-aware by design.** Concurrency limits are configurable and deliberately conservative, since the Graph API returns HTTP 429 to aggressive clients.
 - **Hackable.** It's a small, dependency-injected C# console app. Adding a command means adding one class implementing `ICommand`.
 
-**Where it doesn't win:** there is no real-time file watching, no conflict resolution, no delete propagation, and no rename tracking. If you want a fully automated two-way mirror, use `abraunegg/onedrive`. OneDriver.Net is for people who want control and a small blast radius.
+**Where it doesn't win:** monitoring is upload-only and foreground-only, and there is no conflict resolution, no delete propagation, and no rename tracking. If you want a fully automated two-way mirror, use `abraunegg/onedrive`. OneDriver.Net is for people who want control and a small blast radius.
 
 ---
 
@@ -114,6 +114,7 @@ Set it to `false` if you are on a desktop with a working keyring:
 | `sync-list` | Show all folders currently marked for syncing. |
 | `sync-remove <path>` | Unmark a folder. |
 | `sync` | Sync every marked folder: download remote-only files, upload local-only files. |
+| `monitor` | Watch every marked folder and upload new files as they appear. Runs until you press Enter. |
 | `help [command]` | List commands, or show help for one of them. |
 | `quit` | Exit. |
 
@@ -128,7 +129,7 @@ Documents >> sync-list
 Documents >> sync
 ```
 
-Re-run `sync` whenever you want to reconcile; it skips anything already present on both sides.
+Re-run `sync` whenever you want to reconcile; it skips anything already present on both sides. If you are about to drop a batch of new files into a marked folder, run `monitor` instead and they will upload as they land.
 
 ## How syncing works
 
@@ -140,6 +141,29 @@ For every marked folder, `sync` compares the remote listing with the local direc
 - A failure on one file is reported and the rest of the folder continues.
 
 Large folders are enumerated correctly: the Graph API pages `driveItem` children, and the client follows every `@odata.nextLink` via `PageIterator`.
+
+## Watching folders with `monitor`
+
+`sync` is a one-shot reconcile. When you want new files pushed up as you create them, run `monitor`:
+
+```
+root >> monitor
+Starting synchronization of marked folders...
+
+Press [Enter] to stop monitoring and exit.
+File created: /home/jane/OneDrive/Pictures/DSC_0421.jpg
+```
+
+It places a watcher on the local directory of every marked folder and uploads each newly created file. Press Enter to stop.
+
+Things worth knowing:
+
+- **Uploads only.** Nothing is downloaded, deleted, or renamed remotely. Run `sync` for the full reconcile.
+- **Only the marked folder itself**, not its subfolders. Use `mark-all` beforehand if you want the whole tree watched.
+- **Partially written files are not uploaded.** The OS reports a file the moment it is created, long before the writer has finished. The watcher therefore waits until the size stops changing and the file can be opened exclusively before uploading, giving up after 10 minutes.
+- **Foreground only.** There is still no daemon; monitoring lives and dies with the shell session.
+
+On Linux each watched folder consumes an inotify watch. If you have marked a very large number of folders you may hit `/proc/sys/fs/inotify/max_user_watches`; the watcher reports the error instead of failing silently.
 
 ## Layout on disk
 

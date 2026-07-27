@@ -47,6 +47,7 @@ internal class Program
         services.AddTransient<ICommand, MarkSubFolderToSyncCommand>();
         services.AddTransient<ICommand, RemoveFolderToSyncCommand>();
         services.AddTransient<ICommand, SyncCommand>();
+        services.AddTransient<ICommand, MonitorFoldersToSyncCommand>();
 
         services.AddSingleton<Application>();
     }
